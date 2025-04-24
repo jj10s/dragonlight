@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Aurelya Hatches</title>
+  <style>
+    body {
+      background-color: #000;
+      color: #00ccff;
+      font-family: serif;
+      text-align: center;
+      padding-top: 100px;
+    }
+    .glow {
+      animation: pulse 2s infinite;
+      color: #88f;
+    }
+    @keyframes pulse {
+      0% { text-shadow: 0 0 5px #88f; }
+      50% { text-shadow: 0 0 20px #00ccff; }
+      100% { text-shadow: 0 0 5px #88f; }
+    }
+    button {
+      margin-top: 40px;
+      font-size: 18px;
+      padding: 12px 25px;
+      background-color: #111;
+      color: white;
+      border: 1px solid #00ccff;
+      border-radius: 8px;
+      cursor: pointer;
+    }
+  </style>
+</head>
+<body>
+  <h1 class="glow">The egg trembles in your hands...</h1>
+  <p>You hear her voice again, stronger now:</p>
+  <p><em>"I am Aurelya... and we are bound."</em></p>
+  <p>The shell cracks open, and a sapphire-scaled hatchling steps out.</p>
+
+  <button onclick="window.location.href='index.html'">Continue Your Journey</button>
+</body>
+</html>
