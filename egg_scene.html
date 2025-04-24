@@ -31,6 +31,16 @@
             max-width: 80%;
             text-align: center;
         }
+        #message button {
+            margin-top: 10px;
+            padding: 10px 20px;
+            font-size: 16px;
+            background-color: #111;
+            color: white;
+            border: 1px solid #00ccff;
+            border-radius: 8px;
+            cursor: pointer;
+        }
     </style>
 </head>
 <body>
@@ -80,9 +90,10 @@ function checkEggProximity() {
     const distance = Math.sqrt(dx*dx + dz*dz);
     if (distance < 3 && !shown) {
         shown = true;
-        document.getElementById("message").innerHTML = 
-            "You feel a pull in your chest. The egg pulses with light.<br><em>A voice stirs in your mind...</em><br>\\\"I see you, little star.\\\"";
-        document.getElementById("message").style.display = "block";
+        const messageBox = document.getElementById("message");
+        messageBox.innerHTML = "You feel a pull in your chest. The egg pulses with light.<br><em>A voice stirs in your mind...</em><br>\\\"I see you, little star.\\\"";
+        messageBox.innerHTML += '<br><br><button onclick="location.href=\\'hatch_scene.html\\'">Touch the egg</button>';
+        messageBox.style.display = "block";
     }
 }
 
