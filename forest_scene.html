@@ -49,13 +49,15 @@ let light = new THREE.DirectionalLight(0xffffff, 1);
 light.position.set(5, 10, 7);
 scene.add(light);
 
-// Ground with hills
+// Ground with hills (FIXED)
 const groundGeometry = new THREE.PlaneGeometry(500, 500, 50, 50);
-groundGeometry.verticesNeedUpdate = true;
-for (let i = 0; i < groundGeometry.vertices.length; i++) {
-  groundGeometry.vertices[i].z = Math.random() * 2; // small hills
+const position = groundGeometry.attributes.position;
+for (let i = 0; i < position.count; i++) {
+  const y = Math.random() * 2; // small hills
+  position.setZ(i, y);
 }
 groundGeometry.computeVertexNormals();
+
 let ground = new THREE.Mesh(
   groundGeometry,
   new THREE.MeshPhongMaterial({ color: 0x228B22 })
@@ -90,7 +92,7 @@ player.add(sword);
 player.position.set(0, 1, 0);
 scene.add(player);
 
-// Mentor (simple companion)
+// Mentor
 let mentor = new THREE.Group();
 let mentorBody = new THREE.Mesh(
   new THREE.BoxGeometry(1, 2, 1),
