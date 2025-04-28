@@ -1,116 +1,27 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <title>The Egg of Aurelya</title>
-    <style>
-        body { margin: 0; overflow: hidden; background: #000; }
-        canvas { display: block; }
-        #hud {
-            position: absolute;
-            top: 10px;
-            left: 10px;
-            color: white;
-            font-family: monospace;
-            background-color: rgba(0, 0, 0, 0.5);
-            padding: 10px;
-            border-radius: 8px;
-            z-index: 10;
-        }
-        #message {
-            position: absolute;
-            bottom: 20px;
-            left: 50%;
-            transform: translateX(-50%);
-            color: cyan;
-            font-family: serif;
-            background: rgba(0, 0, 0, 0.6);
-            padding: 15px;
-            border-radius: 8px;
-            display: none;
-            max-width: 80%;
-            text-align: center;
-        }
-        #message button {
-            margin-top: 10px;
-            padding: 10px 20px;
-            font-size: 16px;
-            background-color: #111;
-            color: white;
-            border: 1px solid #00ccff;
-            border-radius: 8px;
-            cursor: pointer;
-        }
-    </style>
+  <meta charset="UTF-8">
+  <title>Dragonlight 3D</title>
+  <style>
+    body { background-color: #111; color: #fff; font-family: serif; text-align: center; margin-top: 100px; }
+    button {
+      padding: 20px;
+      font-size: 20px;
+      background-color: #222;
+      color: cyan;
+      border: 2px solid cyan;
+      border-radius: 10px;
+      cursor: pointer;
+    }
+    button:hover {
+      background-color: #333;
+    }
+  </style>
 </head>
 <body>
-<div id="hud"><strong>Objective:</strong> Explore the cave and find the source of the glow...</div>
-<div id="message"></div>
-<script src="https://cdn.jsdelivr.net/npm/three@0.150.1/build/three.min.js"></script>
-<script>
-let scene = new THREE.Scene();
-scene.background = new THREE.Color(0x000000);
-let camera = new THREE.PerspectiveCamera(75, window.innerWidth/window.innerHeight, 0.1, 1000);
-let renderer = new THREE.WebGLRenderer();
-renderer.setSize(window.innerWidth, window.innerHeight);
-document.body.appendChild(renderer.domElement);
-
-let light = new THREE.PointLight(0x88ccff, 1.5, 100);
-light.position.set(0, 5, 5);
-scene.add(light);
-
-let ground = new THREE.Mesh(
-    new THREE.PlaneGeometry(50, 50),
-    new THREE.MeshStandardMaterial({ color: 0x222222 })
-);
-ground.rotation.x = -Math.PI / 2;
-scene.add(ground);
-
-let egg = new THREE.Mesh(
-    new THREE.SphereGeometry(1, 32, 32),
-    new THREE.MeshStandardMaterial({ color: 0x1e90ff, emissive: 0x3399ff, shininess: 100 })
-);
-egg.position.set(0, 1, -10);
-scene.add(egg);
-
-let player = new THREE.Object3D();
-player.position.set(0, 1.6, 10);
-scene.add(player);
-camera.position.set(0, 3, 15);
-camera.lookAt(player.position);
-
-let keys = {};
-document.addEventListener('keydown', e => keys[e.key.toLowerCase()] = true);
-document.addEventListener('keyup', e => keys[e.key.toLowerCase()] = false);
-
-let shown = false;
-function checkEggProximity() {
-    const dx = player.position.x - egg.position.x;
-    const dz = player.position.z - egg.position.z;
-    const distance = Math.sqrt(dx*dx + dz*dz);
-    if (distance < 3 && !shown) {
-        shown = true;
-        const messageBox = document.getElementById("message");
-        messageBox.innerHTML = "You feel a pull in your chest. The egg pulses with light.<br><em>A voice stirs in your mind...</em><br>\\\"I see you, little star.\\\"";
-        messageBox.innerHTML += '<br><br><button onclick="location.href=\\'hatch_scene.html\\'">Touch the egg</button>';
-        messageBox.style.display = "block";
-    }
-}
-
-function animate() {
-    requestAnimationFrame(animate);
-    if (keys["w"]) player.position.z -= 0.1;
-    if (keys["s"]) player.position.z += 0.1;
-    if (keys["a"]) player.position.x -= 0.1;
-    if (keys["d"]) player.position.x += 0.1;
-
-    camera.position.x = player.position.x;
-    camera.position.z = player.position.z + 5;
-    camera.lookAt(player.position);
-    checkEggProximity();
-    renderer.render(scene, camera);
-}
-animate();
-</script>
+  <h1>Dragonlight: Rise of the Farmborn</h1>
+  <p>A full fantasy RPG begins here.</p>
+  <button onclick="location.href='hatch_scene.html'">Start Journey</button>
 </body>
 </html>
