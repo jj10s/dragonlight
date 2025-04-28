@@ -2,66 +2,93 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>Forest of Beginnings</title>
+  <title>Palancar Valley</title>
   <style>
-    body { margin: 0; overflow: hidden; background: #000; }
+    body { margin: 0; overflow: hidden; background: #87ceeb; }
     canvas { display: block; }
-    #attackButton {
+    #ui {
       position: absolute;
       bottom: 20px;
-      right: 20px;
-      padding: 15px 25px;
-      font-size: 20px;
+      left: 50%;
+      transform: translateX(-50%);
+      z-index: 10;
+      display: flex;
+      gap: 20px;
+    }
+    button {
+      padding: 10px 20px;
+      font-size: 18px;
+      border: 2px solid white;
       background-color: #222;
       color: white;
-      border: 2px solid lime;
       border-radius: 10px;
       cursor: pointer;
-      z-index: 10;
+    }
+    button:hover {
+      background-color: #444;
     }
   </style>
 </head>
 <body>
 
-<button id="attackButton" onclick="attack()">Attack</button>
+<div id="ui">
+  <button onclick="attack()">Attack</button>
+  <button onclick="castFire()">Firebolt</button>
+</div>
 
 <script src="https://cdn.jsdelivr.net/npm/three@0.150.1/build/three.min.js"></script>
 <script>
 let scene = new THREE.Scene();
-scene.background = new THREE.Color(0x87ceeb); // blue sky
-
 let camera = new THREE.PerspectiveCamera(75, window.innerWidth/window.innerHeight, 0.1, 1000);
 let renderer = new THREE.WebGLRenderer();
 renderer.setSize(window.innerWidth, window.innerHeight);
 document.body.appendChild(renderer.domElement);
 
-// Light
-let light = new THREE.DirectionalLight(0xffffff, 1);
-light.position.set(5, 10, 7.5);
-scene.add(light);
+// Lights
+let sun = new THREE.DirectionalLight(0xffffff, 1);
+sun.position.set(5, 10, 7);
+scene.add(sun);
 
 // Ground
 let ground = new THREE.Mesh(
-  new THREE.PlaneGeometry(100, 100),
+  new THREE.PlaneGeometry(500, 500),
   new THREE.MeshStandardMaterial({ color: 0x228B22 })
 );
 ground.rotation.x = -Math.PI / 2;
 scene.add(ground);
 
-// Player (your hero)
-let player = new THREE.Object3D();
-player.position.set(0, 1.6, 0);
-scene.add(player);
-
-// Sword (simple box for now)
-let sword = new THREE.Mesh(
-  new THREE.BoxGeometry(0.1, 1, 0.1),
-  new THREE.MeshStandardMaterial({ color: 0xffffff })
+// Player
+let player = new THREE.Group();
+let body = new THREE.Mesh(
+  new THREE.BoxGeometry(1, 2, 1),
+  new THREE.MeshStandardMaterial({ color: 0x4682B4 }) // blue body
 );
-sword.position.set(0.5, 1, 0);
+body.position.y = 1;
+player.add(body);
+
+// Sword
+let sword = new THREE.Mesh(
+  new THREE.BoxGeometry(0.2, 1, 0.2),
+  new THREE.MeshStandardMaterial({ color: 0xcccccc })
+);
+sword.position.set(0.6, 1, 0);
 player.add(sword);
 
-// Trees (simple green cones)
+player.position.set(0, 1, 0);
+scene.add(player);
+
+// Mentor
+let mentor = new THREE.Group();
+let mentorBody = new THREE.Mesh(
+  new THREE.BoxGeometry(1, 2, 1),
+  new THREE.MeshStandardMaterial({ color: 0x996633 }) // brown robe
+);
+mentorBody.position.y = 1;
+mentor.add(mentorBody);
+mentor.position.set(3, 1, 0);
+scene.add(mentor);
+
+// Trees
 function createTree(x, z) {
   let trunk = new THREE.Mesh(
     new THREE.CylinderGeometry(0.2, 0.2, 1),
@@ -70,7 +97,7 @@ function createTree(x, z) {
   trunk.position.set(x, 0.5, z);
 
   let leaves = new THREE.Mesh(
-    new THREE.ConeGeometry(0.7, 2, 8),
+    new THREE.ConeGeometry(1, 2, 8),
     new THREE.MeshStandardMaterial({ color: 0x006400 })
   );
   leaves.position.set(x, 2, z);
@@ -79,9 +106,8 @@ function createTree(x, z) {
   scene.add(leaves);
 }
 
-// Generate random trees
-for (let i = 0; i < 20; i++) {
-  createTree(Math.random() * 80 - 40, Math.random() * 80 - 40);
+for (let i = 0; i < 50; i++) {
+  createTree(Math.random() * 400 - 200, Math.random() * 400 - 200);
 }
 
 // Controls
@@ -89,35 +115,83 @@ let keys = {};
 document.addEventListener('keydown', (e) => keys[e.key.toLowerCase()] = true);
 document.addEventListener('keyup', (e) => keys[e.key.toLowerCase()] = false);
 
-// Camera follows player
-camera.position.set(0, 5, 10);
-camera.lookAt(player.position);
+// Camera Settings
+let cameraAngle = 0;
+const cameraDistance = 8;
 
-// Attack action
-let isAttacking = false;
+// Attack
+let attacking = false;
 function attack() {
-  if (!isAttacking) {
-    isAttacking = true;
-    sword.rotation.z = -Math.PI / 4; // swing sword
+  if (!attacking) {
+    attacking = true;
+    sword.rotation.z = -Math.PI/4;
     setTimeout(() => {
       sword.rotation.z = 0;
-      isAttacking = false;
-    }, 300); // swing lasts 300ms
+      attacking = false;
+    }, 300);
   }
+}
+
+// Fire Magic
+function castFire() {
+  const fireball = new THREE.Mesh(
+    new THREE.SphereGeometry(0.2, 8, 8),
+    new THREE.MeshStandardMaterial({ color: 0xff4500, emissive: 0xff4500 })
+  );
+  fireball.position.copy(player.position);
+  fireball.position.y += 1;
+
+  scene.add(fireball);
+
+  const direction = new THREE.Vector3(0, 0, -1).applyAxisAngle(new THREE.Vector3(0, 1, 0), cameraAngle);
+  
+  function moveFireball() {
+    fireball.position.addScaledVector(direction, 0.3);
+    if (fireball.position.length() > 200) {
+      scene.remove(fireball);
+    } else {
+      requestAnimationFrame(moveFireball);
+    }
+  }
+  moveFireball();
 }
 
 // Animate
 function animate() {
   requestAnimationFrame(animate);
 
-  let speed = 0.1;
-  if (keys["w"]) player.position.z -= speed;
-  if (keys["s"]) player.position.z += speed;
-  if (keys["a"]) player.position.x -= speed;
-  if (keys["d"]) player.position.x += speed;
+  let speed = 0.15;
+  if (keys["w"]) {
+    player.position.z -= speed * Math.cos(cameraAngle);
+    player.position.x -= speed * Math.sin(cameraAngle);
+  }
+  if (keys["s"]) {
+    player.position.z += speed * Math.cos(cameraAngle);
+    player.position.x += speed * Math.sin(cameraAngle);
+  }
+  if (keys["a"]) {
+    player.position.x -= speed * Math.cos(cameraAngle);
+    player.position.z += speed * Math.sin(cameraAngle);
+  }
+  if (keys["d"]) {
+    player.position.x += speed * Math.cos(cameraAngle);
+    player.position.z -= speed * Math.sin(cameraAngle);
+  }
 
-  camera.position.x = player.position.x;
-  camera.position.z = player.position.z + 10;
+  // Arrow keys rotate camera
+  if (keys["arrowleft"]) {
+    cameraAngle += 0.03;
+  }
+  if (keys["arrowright"]) {
+    cameraAngle -= 0.03;
+  }
+
+  // Mentor follows player
+  mentor.position.lerp(new THREE.Vector3(player.position.x + 3, 1, player.position.z), 0.02);
+
+  camera.position.x = player.position.x + Math.sin(cameraAngle) * cameraDistance;
+  camera.position.z = player.position.z + Math.cos(cameraAngle) * cameraDistance;
+  camera.position.y = 5;
   camera.lookAt(player.position);
 
   renderer.render(scene, camera);
