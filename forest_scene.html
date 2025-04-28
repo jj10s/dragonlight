@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>Palancar Valley</title>
+  <title>Palancar Valley - Zelda Style</title>
   <style>
     body { margin: 0; overflow: hidden; background: #87ceeb; }
     canvas { display: block; }
@@ -40,31 +40,44 @@
 <script>
 let scene = new THREE.Scene();
 let camera = new THREE.PerspectiveCamera(75, window.innerWidth/window.innerHeight, 0.1, 1000);
-let renderer = new THREE.WebGLRenderer();
+let renderer = new THREE.WebGLRenderer({ antialias: true });
 renderer.setSize(window.innerWidth, window.innerHeight);
 document.body.appendChild(renderer.domElement);
 
-// Lights
-let sun = new THREE.DirectionalLight(0xffffff, 1);
-sun.position.set(5, 10, 7);
-scene.add(sun);
+// Soft Light
+let light = new THREE.DirectionalLight(0xffffff, 1);
+light.position.set(5, 10, 7);
+scene.add(light);
 
-// Ground
+// Ground with hills
+const groundGeometry = new THREE.PlaneGeometry(500, 500, 50, 50);
+groundGeometry.verticesNeedUpdate = true;
+for (let i = 0; i < groundGeometry.vertices.length; i++) {
+  groundGeometry.vertices[i].z = Math.random() * 2; // small hills
+}
+groundGeometry.computeVertexNormals();
 let ground = new THREE.Mesh(
-  new THREE.PlaneGeometry(500, 500),
-  new THREE.MeshStandardMaterial({ color: 0x228B22 })
+  groundGeometry,
+  new THREE.MeshPhongMaterial({ color: 0x228B22 })
 );
 ground.rotation.x = -Math.PI / 2;
 scene.add(ground);
 
-// Player
+// Player (Link-like)
 let player = new THREE.Group();
 let body = new THREE.Mesh(
   new THREE.BoxGeometry(1, 2, 1),
-  new THREE.MeshStandardMaterial({ color: 0x4682B4 }) // blue body
+  new THREE.MeshStandardMaterial({ color: 0x4682B4 }) // Blue tunic
 );
 body.position.y = 1;
 player.add(body);
+
+let head = new THREE.Mesh(
+  new THREE.SphereGeometry(0.5, 16, 16),
+  new THREE.MeshStandardMaterial({ color: 0xffd700 }) // Blond hair
+);
+head.position.y = 2.5;
+player.add(head);
 
 // Sword
 let sword = new THREE.Mesh(
@@ -77,45 +90,65 @@ player.add(sword);
 player.position.set(0, 1, 0);
 scene.add(player);
 
-// Mentor
+// Mentor (simple companion)
 let mentor = new THREE.Group();
 let mentorBody = new THREE.Mesh(
   new THREE.BoxGeometry(1, 2, 1),
-  new THREE.MeshStandardMaterial({ color: 0x996633 }) // brown robe
+  new THREE.MeshStandardMaterial({ color: 0x996633 }) // Brown robe
 );
 mentorBody.position.y = 1;
 mentor.add(mentorBody);
 mentor.position.set(3, 1, 0);
 scene.add(mentor);
 
-// Trees
+// Round Trees and bushes
 function createTree(x, z) {
   let trunk = new THREE.Mesh(
-    new THREE.CylinderGeometry(0.2, 0.2, 1),
+    new THREE.CylinderGeometry(0.2, 0.2, 2),
     new THREE.MeshStandardMaterial({ color: 0x8B4513 })
   );
-  trunk.position.set(x, 0.5, z);
+  trunk.position.set(x, 1, z);
 
   let leaves = new THREE.Mesh(
-    new THREE.ConeGeometry(1, 2, 8),
+    new THREE.SphereGeometry(2, 16, 16),
     new THREE.MeshStandardMaterial({ color: 0x006400 })
   );
-  leaves.position.set(x, 2, z);
+  leaves.position.set(x, 3, z);
 
   scene.add(trunk);
   scene.add(leaves);
 }
 
-for (let i = 0; i < 50; i++) {
+for (let i = 0; i < 40; i++) {
   createTree(Math.random() * 400 - 200, Math.random() * 400 - 200);
 }
+
+// Random rocks
+function createRock(x, z) {
+  let rock = new THREE.Mesh(
+    new THREE.DodecahedronGeometry(Math.random() * 0.5 + 0.3),
+    new THREE.MeshStandardMaterial({ color: 0x808080 })
+  );
+  rock.position.set(x, 0.3, z);
+  scene.add(rock);
+}
+for (let i = 0; i < 20; i++) {
+  createRock(Math.random() * 400 - 200, Math.random() * 400 - 200);
+}
+
+// Butterfly
+let butterfly = new THREE.Mesh(
+  new THREE.SphereGeometry(0.1, 8, 8),
+  new THREE.MeshStandardMaterial({ color: 0xff69b4 })
+);
+butterfly.position.set(0, 3, 2);
+scene.add(butterfly);
 
 // Controls
 let keys = {};
 document.addEventListener('keydown', (e) => keys[e.key.toLowerCase()] = true);
 document.addEventListener('keyup', (e) => keys[e.key.toLowerCase()] = false);
 
-// Camera Settings
 let cameraAngle = 0;
 const cameraDistance = 8;
 
@@ -147,7 +180,7 @@ function castFire() {
   
   function moveFireball() {
     fireball.position.addScaledVector(direction, 0.3);
-    if (fireball.position.length() > 200) {
+    if (fireball.position.length() > 400) {
       scene.remove(fireball);
     } else {
       requestAnimationFrame(moveFireball);
@@ -178,7 +211,7 @@ function animate() {
     player.position.z -= speed * Math.sin(cameraAngle);
   }
 
-  // Arrow keys rotate camera
+  // Rotate camera
   if (keys["arrowleft"]) {
     cameraAngle += 0.03;
   }
@@ -188,6 +221,11 @@ function animate() {
 
   // Mentor follows player
   mentor.position.lerp(new THREE.Vector3(player.position.x + 3, 1, player.position.z), 0.02);
+
+  // Butterfly floating
+  butterfly.position.x = player.position.x + Math.sin(Date.now() * 0.002) * 3;
+  butterfly.position.z = player.position.z + Math.cos(Date.now() * 0.002) * 3;
+  butterfly.position.y = 3 + Math.sin(Date.now() * 0.005);
 
   camera.position.x = player.position.x + Math.sin(cameraAngle) * cameraDistance;
   camera.position.z = player.position.z + Math.cos(cameraAngle) * cameraDistance;
