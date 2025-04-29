@@ -30,13 +30,13 @@
   </style>
 </head>
 <body>
-
 <div id="ui">
   <button onclick="attack()">Attack</button>
   <button onclick="castFire()">Firebolt</button>
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/three@0.150.1/build/three.min.js"></script>
+
 <script>
 let scene = new THREE.Scene();
 let camera = new THREE.PerspectiveCamera(75, window.innerWidth/window.innerHeight, 0.1, 1000);
@@ -44,39 +44,18 @@ let renderer = new THREE.WebGLRenderer({ antialias: true });
 renderer.setSize(window.innerWidth, window.innerHeight);
 document.body.appendChild(renderer.domElement);
 
-// Lights
+// Light
 let light = new THREE.DirectionalLight(0xffffff, 1);
 light.position.set(10, 20, 10);
 scene.add(light);
 
-// Flat Ground
+// Ground
 let ground = new THREE.Mesh(
   new THREE.PlaneGeometry(500, 500),
   new THREE.MeshPhongMaterial({ color: 0x228B22 })
 );
 ground.rotation.x = -Math.PI / 2;
 scene.add(ground);
-
-// Simple terrain features
-function createBox(x, y, z, w, h, d, color) {
-  const box = new THREE.Mesh(
-    new THREE.BoxGeometry(w, h, d),
-    new THREE.MeshStandardMaterial({ color })
-  );
-  box.position.set(x, y + h / 2, z);
-  scene.add(box);
-  return box;
-}
-
-// Cliffside City (high up)
-for (let i = 0; i < 5; i++) {
-  createBox(100 + i * 6, 10, -100, 5, 10, 5, 0x999999); // stone buildings
-}
-createBox(115, 5, -100, 40, 10, 40, 0x555555); // cliff base
-
-// Farm (lower ground)
-createBox(-120, 1, 50, 10, 2, 10, 0x8B4513); // barn
-createBox(-130, 0.5, 55, 10, 1, 10, 0xDEB887); // wheat field
 
 // River
 let river = new THREE.Mesh(
@@ -86,3 +65,177 @@ let river = new THREE.Mesh(
 river.rotation.x = -Math.PI / 2;
 river.position.set(0, 0.1, -30);
 scene.add(river);
+
+// Farm
+let farm = new THREE.Mesh(
+  new THREE.BoxGeometry(10, 2, 10),
+  new THREE.MeshStandardMaterial({ color: 0x8B4513 })
+);
+farm.position.set(-120, 1, 50);
+scene.add(farm);
+
+// Cliff City
+for (let i = 0; i < 5; i++) {
+  let house = new THREE.Mesh(
+    new THREE.BoxGeometry(5, 10, 5),
+    new THREE.MeshStandardMaterial({ color: 0x999999 })
+  );
+  house.position.set(100 + i * 6, 5, -100);
+  scene.add(house);
+}
+let cliff = new THREE.Mesh(
+  new THREE.BoxGeometry(40, 10, 40),
+  new THREE.MeshStandardMaterial({ color: 0x555555 })
+);
+cliff.position.set(115, 5, -100);
+scene.add(cliff);
+
+// Player (you)
+let player = new THREE.Group();
+let body = new THREE.Mesh(
+  new THREE.BoxGeometry(1, 2, 1),
+  new THREE.MeshStandardMaterial({ color: 0x4682B4 })
+);
+body.position.y = 1;
+player.add(body);
+let head = new THREE.Mesh(
+  new THREE.SphereGeometry(0.5, 16, 16),
+  new THREE.MeshStandardMaterial({ color: 0xffd700 })
+);
+head.position.y = 2.5;
+player.add(head);
+let sword = new THREE.Mesh(
+  new THREE.BoxGeometry(0.2, 1, 0.2),
+  new THREE.MeshStandardMaterial({ color: 0xcccccc })
+);
+sword.position.set(0.6, 1, 0);
+player.add(sword);
+player.position.set(0, 1, 0);
+scene.add(player);
+
+// Mentor
+let mentor = new THREE.Group();
+let mentorBody = new THREE.Mesh(
+  new THREE.BoxGeometry(1, 2, 1),
+  new THREE.MeshStandardMaterial({ color: 0x996633 })
+);
+mentorBody.position.y = 1;
+mentor.add(mentorBody);
+mentor.position.set(3, 1, 0);
+scene.add(mentor);
+
+// Dragon (follows player, can fly)
+let dragon = new THREE.Mesh(
+  new THREE.ConeGeometry(1.5, 4, 32),
+  new THREE.MeshStandardMaterial({ color: 0x4169E1, emissive: 0x00ffff })
+);
+dragon.rotation.x = Math.PI / 2;
+dragon.position.set(0, 3, -5);
+scene.add(dragon);
+
+let flying = false;
+let cameraAngle = 0;
+const cameraDistance = 8;
+
+// Controls
+let keys = {};
+document.addEventListener('keydown', (e) => keys[e.key.toLowerCase()] = true);
+document.addEventListener('keyup', (e) => keys[e.key.toLowerCase()] = false);
+
+document.addEventListener('keydown', (e) => {
+  if (e.code === "Space") {
+    flying = !flying;
+    if (flying) {
+      player.visible = false;
+    } else {
+      player.visible = true;
+      dragon.position.y = 3;
+    }
+  }
+});
+
+// Attack
+let attacking = false;
+function attack() {
+  if (!attacking) {
+    attacking = true;
+    sword.rotation.z = -Math.PI / 4;
+    setTimeout(() => {
+      sword.rotation.z = 0;
+      attacking = false;
+    }, 300);
+  }
+}
+
+// Fire Magic
+function castFire() {
+  const fireball = new THREE.Mesh(
+    new THREE.SphereGeometry(0.2, 8, 8),
+    new THREE.MeshStandardMaterial({ color: 0xff4500, emissive: 0xff4500 })
+  );
+  fireball.position.copy(player.position);
+  fireball.position.y += 1;
+  scene.add(fireball);
+  const direction = new THREE.Vector3(0, 0, -1).applyAxisAngle(new THREE.Vector3(0, 1, 0), cameraAngle);
+  function moveFireball() {
+    fireball.position.addScaledVector(direction, 0.3);
+    if (fireball.position.length() > 400) {
+      scene.remove(fireball);
+    } else {
+      requestAnimationFrame(moveFireball);
+    }
+  }
+  moveFireball();
+}
+
+// Animate
+function animate() {
+  requestAnimationFrame(animate);
+  let speed = 0.15;
+
+  if (!flying) {
+    if (keys["w"]) {
+      player.position.z -= speed * Math.cos(cameraAngle);
+      player.position.x -= speed * Math.sin(cameraAngle);
+    }
+    if (keys["s"]) {
+      player.position.z += speed * Math.cos(cameraAngle);
+      player.position.x += speed * Math.sin(cameraAngle);
+    }
+    if (keys["a"]) {
+      player.position.x -= speed * Math.cos(cameraAngle);
+      player.position.z += speed * Math.sin(cameraAngle);
+    }
+    if (keys["d"]) {
+      player.position.x += speed * Math.cos(cameraAngle);
+      player.position.z -= speed * Math.sin(cameraAngle);
+    }
+    mentor.position.lerp(new THREE.Vector3(player.position.x + 3, 1, player.position.z), 0.02);
+    dragon.position.lerp(new THREE.Vector3(player.position.x - 2, 3, player.position.z - 2), 0.05);
+  } else {
+    if (keys["arrowup"]) {
+      dragon.position.x -= speed * Math.sin(cameraAngle);
+      dragon.position.z -= speed * Math.cos(cameraAngle);
+    }
+    if (keys["arrowdown"]) {
+      dragon.position.y -= 0.1;
+    }
+    if (keys["arrowleft"]) {
+      cameraAngle += 0.03;
+    }
+    if (keys["arrowright"]) {
+      cameraAngle -= 0.03;
+    }
+  }
+
+  camera.position.x = (flying ? dragon.position.x : player.position.x) + Math.sin(cameraAngle) * cameraDistance;
+  camera.position.z = (flying ? dragon.position.z : player.position.z) + Math.cos(cameraAngle) * cameraDistance;
+  camera.position.y = 5;
+  camera.lookAt(flying ? dragon.position : player.position);
+
+  renderer.render(scene, camera);
+}
+animate();
+</script>
+</body>
+</html>
