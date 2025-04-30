@@ -214,6 +214,7 @@ function animate() {
     dragon.position.lerp(new THREE.Vector3(player.position.x - 2, 3, player.position.z - 2), 0.05);
   } else {
     if (keys["arrowup"]) {
+
       dragon.position.x -= speed * Math.sin(cameraAngle);
       dragon.position.z -= speed * Math.cos(cameraAngle);
     }
